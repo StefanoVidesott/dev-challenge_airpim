@@ -1,0 +1,29 @@
+.container {
+    max-width: 400px;
+    margin: 50px auto;
+    text-align: center;
+}
+
+input[type="text"], button {
+    padding: 10px;
+    margin: 10px;
+    width: 100;
+}
+
+button {
+    background-color: #2a86e9;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#result {
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+#history {
+    margin-top: 20px;
+    text-align: left;
+}
