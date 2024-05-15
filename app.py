@@ -1,9 +1,9 @@
+import os
 import json
 import logging
 import math
 import urllib.parse
-from flask import Flask, request
-import os
+from flask import Flask, request, send_from_directory
 
 DEFAULT_PORT = 8000
 ALLOWED_FUNCTIONS = {"sin": math.sin, "cos": math.cos, "tan": math.tan, "log": math.log, "sqrt": math.sqrt, "exp": math.exp, "pow": math.pow, "abs": abs, "factorial": math.factorial, "pi": math.pi, "e": math.e}
@@ -24,6 +24,10 @@ def index():
     except Exception as e:
         logging.error(f"Error loading index.html: {e}")
         return '<h1>Error loading index.html</h1>'
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'resources/favicon.ico',mimetype='image/vnd.microsoft.icon')
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
