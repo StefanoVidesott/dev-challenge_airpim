@@ -2,6 +2,7 @@
 # Dev-Challenge
 
 Il progetto è nato da una "sfida di sviluppo" con l'obbiettivo di stimare alcune mie abilità tecniche; consiste nella realizzazione di un'applicazione web che funge da calcolatrice online. Gli utenti possono inserire espressioni aritmetiche nella pagina web e ottenerne il risultato.
+Ps. Il progetto è stato successivamente riutilizzato per compiere ulteriori operazioni di stima con istruzioni non presenti sulla consegna.
 
 ## Istruzioni per l'esecuzione
 
@@ -23,26 +24,22 @@ Il progetto è nato da una "sfida di sviluppo" con l'obbiettivo di stimare alcun
 │   └── style.css
 ├── templates
 │   └── index.html
+├── .gitignore
 ├── app.py
-├── Dockerfile
-└── README.md
+├── dev-challenge.pdf
+├── README.md
+├── requirements.txt
+└── start.sh
 
-3 directories, 7 files
+3 directories, 10 files
 ```
--   `app.py`: Il file principale del server web. Contiene la logica per gestire le richieste HTTP e calcolare le espressioni aritmetiche.
--   `index.html`: La pagina web della calcolatrice.
+-   `app.py`: Il file principale del server web.
+-   `index.html`: Il template della pagina web.
 -   `style.css`: Il foglio di stile per la pagina web.
 -   `script.js`: Lo script JavaScript per gestire le interazioni utente e le richieste al server.
+-   `dev-challenge.pdf`: La consegna iniziare assegnatami.
+-   `start.sh`: Script di avvio del server.
 
-## Funzionalità
--  Il server dispone della possibilità di selezionare la porta tramite apposito argomento all'avvio.
-(`python app.py start --port <PORT_NUMBER>`)
--   Gli utenti possono inserire espressioni aritmetiche nel campo di input e premere il pulsante "CALCOLA" per ottenere il risultato.
--   Il server valuta l'espressione aritmetica e restituisce il risultato in formato JSON.
--   Gli errori di sintassi nell'espressione aritmetica vengono gestiti e restituiti agli utenti.
-
-## Docker
--   Nel progetto è anche presente un `Dockerfile` che simula il progetto in un ambiente con installato python 3.9. 
-  Per avviare il progetto tramite Docker è sufficente eseguire i sguenti comandi nella sua directory principale.
-1. `docker build -t dev-challenge .`
-2. `sudo docker run -it --rm -p 8000:8000 dev-challenge`
+## Avvio del server
+  Per avviare il server è necessario scaricare il codice sorgente del progetto ed estrarlo.
+  Aprire un terminale nella cartella del progetto ed eseguire il seguente comando: `chmod +x start.sh && ./start.sh`
