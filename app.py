@@ -64,6 +64,9 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
             expression = self.translate_expression(expression)
             result = eval(expression, {'__builtins__': None}, ALLOWED_FUNCTIONS)
         except Exception as e:
+            status = 'error'
+            logging.error(f"Error evaluating expression: {e}")
+            
             if type(e) == NameError:
                 error_type = 'Name Error'
             elif type(e) == ValueError:
@@ -79,9 +82,6 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
                 logging.warning(f"possible SQL Injection attempt from {self.client_address}: {expression}")
             else:
                 error_type = 'Unknown Error'
-                print(e, type(e))
-            status = 'error'
-            logging.error(f"Error evaluating expression: {e}")
 
         return result, error_type, status
 
@@ -93,10 +93,13 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
 # Funzione per avviare il server    
 def start_server(port):
     with socketserver.TCPServer(("", port), MyHttpRequestHandler) as httpd:
-        print(f"Server successfully started on http://localhost:{port}")
+        logging.debug(f"Server successfully started on http://localhost:{port}")
         httpd.serve_forever()
 
 def main():
+    # Configura il logger
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
     # Configura il parser degli argomenti
     parser = argparse.ArgumentParser(description="Web Calculator Application")
     parser.add_argument("command", choices=["start"], help="Command to execute")
@@ -105,7 +108,10 @@ def main():
     args = parser.parse_args()
 
     if args.command == "start":
-        start_server(args.port)
+        try:
+            start_server(args.port)
+        except KeyboardInterrupt:
+            logging.debug("Server stopped by user")
 
 if __name__ == "__main__":
     main()
