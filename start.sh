@@ -1,6 +1,15 @@
 #!/bin/bash
 
-# Check if the port number is provided, if not, set it to 8000
-port=${1:-8000}
+#check if direcotry does not exist
+if [ ! -d "/tmp/dev-challenge_venv" ]; then
+    echo "Creating virtual environment"
+    mkdir /tmp/dev-challenge_venv
+    python3 -m venv /tmp/dev-challenge_venv
+    source /tmp/dev-challenge_venv/bin/activate
+    pip install -r requirements.txt
+else
+    echo "Virtual environment already exists"
+    source /tmp/dev-challenge_venv/bin/activate
+fi
 
-docker run -it -v ./:/dev_challenge -w /dev_challenge -p $port:$port python:3.9 python3 app.py start --port $port
+python3 app.py

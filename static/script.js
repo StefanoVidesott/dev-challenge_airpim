@@ -1,37 +1,48 @@
 function calculate() {
-    // Estrae l'espressione inserita dall'utente
+    // Extract the expression entered by the user
     var expression = document.getElementById('expression').value;
-    // Invia la richiesta POST al server
+    // Send a POST request to the server
     fetch('/calculate', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json', // Corrected content type
         },
-        body: 'expression=' + encodeURIComponent(expression)
+        body: JSON.stringify({ expression: expression }) // Convert data to JSON format
     })
-    // Gestisce la risposta del server
+    // Handle the server response
     .then(response => response.json())
     .then(data => {
-        // Estrae gli elementi HTML per il risultato e la storia
+        // Extract HTML elements for the result and history
         var resultElement = document.getElementById('result');
-        // Se il risultato è un errore di sintassi, colora di rosso il risultato
-        if(data.status === 'error') {
-            resultElement.innerHTML = 'Risultato: <span style="color: red;">' + data.error_type + '</span>';
+        // If the result is a syntax error, color the result red
+        if (data.status === 'error') {
+            resultElement.innerHTML = 'Result: <span style="color: red;">' + data.error_type + '</span>';
             return;
         }
-        // Altrimenti colora di verde il risultato
-        if(data.status === 'success') {
-
+        // Otherwise, color the result green
+        if (data.status === 'success') {
             var historyElement = document.getElementById('history');
             resultElement.innerHTML = 'Risultato: <span style="color: green;">' + data.result + '</span>';
             historyElement.innerHTML += '<p>' + expression + ' = ' + '<span style="color: green;">' + data.result + '</span></p>';
-
-        }   
-        // Se il server restituisce uno stato sconosciuto, colora di rosso il risultato
+        }
+        // If the server returns an unknown state, color the result red
         else {
-            resultElement.innerHTML = 'Risultato: <span style="color: red;">Stato sconosciuto</span>';
+            resultElement.innerHTML = 'Result: <span style="color: red;">Unknown status</span>';
         }
     })
     .catch(error => console.error('Errore:', error));
-    console.log('Richiesta inviata');
+    console.log('Request sent to server');
+}
+
+function clear_history() {
+    // Clear the history
+    var historyElement = document.getElementById('history');
+    var resultElement = document.getElementById('result');
+    historyElement.innerHTML = '';
+    resultElement.innerHTML = 'Result:';
+    console.log('History cleared');
+
+    fetch('/clear_history', {
+        method: 'POST'
+    })
 }

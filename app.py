@@ -1,117 +1,96 @@
-import http.server
-import socketserver
-import os
-import urllib.parse
 import json
-import argparse
 import logging
 import math
+import urllib.parse
+from flask import Flask, request
+import os
 
 DEFAULT_PORT = 8000
 ALLOWED_FUNCTIONS = {"sin": math.sin, "cos": math.cos, "tan": math.tan, "log": math.log, "sqrt": math.sqrt, "exp": math.exp, "pow": math.pow, "abs": abs, "factorial": math.factorial, "pi": math.pi, "e": math.e}
+HISTORY_FILE = 'history.json'
 
-class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
-    # Sovrascrive il metodo do_GET per reindirizzare al file index.html nella sotto-cardella templates
-    def do_GET(self):
-        if self.path == '/' or self.path == '/index.html':
-            self.path = os.path.join("templates", 'index.html')
-            self.send_response(200)  # Success
+app = Flask(__name__)
+history = []
 
-        elif self.path == '/favicon.ico':
-            self.path = os.path.join("resources", 'favicon.ico')
-            self.send_response(200)  # Success
+@app.route('/')
+@app.route('/index.html')
+def index():
+    try:
+        load_history()
+        with open('templates/index.html', 'r') as file:
+            file_content = file.read()
+            file_content = file_content.replace('HISTORY_PLACEHOLDER', history_json_to_html(history))
+            return file_content
+    except Exception as e:
+        logging.error(f"Error loading index.html: {e}")
+        return '<h1>Error loading index.html</h1>'
 
-        return http.server.SimpleHTTPRequestHandler.do_GET(self)
+@app.route('/calculate', methods=['POST'])
+def calculate():
+    print(request.get_json())
+    content = request.get_json()
+    expression = content.get('expression', '')
 
-    # Sovrascrive il metodo do_POST per gestire le richieste POST
-    def do_POST(self):
-        # Lgge il contenuto della richiesta POST
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        parsed_data = urllib.parse.parse_qs(post_data.decode('utf-8'))
+    result, error_type, status = evaluate_expression(expression)
+    
+    response = {'result': result, 'error_type': error_type, 'status': status}
+    
+    if status == 'success':
+        status_code = 200
+        history.append({'expression': expression, 'result': result})
+        save_history(history)
+    else:
+        status_code = 400
 
-        # Se il path è /calculate, valuta l'espressione aritmetica e restituisce il risultato
-        if self.path == '/calculate':
-            result = None
-            error_type = None
-            status = 'success'
-            
-            result, error_type, status = self.evaluate_expression(parsed_data)
-                
-            if(status == 'success'):
-                self.send_response(200) # Success
-            else:
-                self.send_response(400) # Bad Request
+    return json.dumps(response), status_code, {'Content-Type': 'application/json'}
 
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'result': result, 'error_type': error_type, 'status': status}).encode())
+@app.route('/clear_history', methods=['POST'])
+def clear_history():
+    global history
+    history = []
+    save_history(history)
+    return json.dumps({'status': 'success'}), 200, {'Content-Type': 'application/json'}
+
+def evaluate_expression(expression):
+    result = None
+    error_type = None
+    status = 'success'
+
+    try:
+        translated_expression = translate_expression(expression)
+        result = eval(translated_expression, {}, ALLOWED_FUNCTIONS)
+    except Exception as e:
+        status = 'error'
+        logging.error(f"Error evaluating expression: {e}")
         
+        if isinstance(e, (NameError, ValueError, KeyError, ZeroDivisionError, SyntaxError, TypeError)):
+            error_type = type(e).__name__
         else:
-            self.send_response(404) # Not Found
-            self.end_headers()
-            self.wfile.write(b'Not Found')
+            error_type = 'Unknown Error'
 
-    # Valuta l'espressione aritmetica
-    def evaluate_expression(self, parsed_data):
-        result = None
-        error_type = None
-        status = 'success'
+    return result, error_type, status
 
-        # Valuta e traduce l'espressione aritmetica
-        try:
-            expression = parsed_data['expression'][0]
-            expression = self.translate_expression(expression)
-            result = eval(expression, {'__builtins__': None}, ALLOWED_FUNCTIONS)
-        except Exception as e:
-            status = 'error'
-            logging.error(f"Error evaluating expression: {e}")
-            
-            if type(e) == NameError:
-                error_type = 'Name Error'
-            elif type(e) == ValueError:
-                error_type = 'Value Error'
-            elif type(e) == KeyError:
-                error_type = 'Key Error'
-            elif type(e) == ZeroDivisionError:
-                error_type = 'Zero Division Error'
-            elif type(e) == SyntaxError:
-                error_type = 'Syntax Error'
-            elif type(e) == TypeError:
-                error_type = 'Type Error'
-                logging.warning(f"possible SQL Injection attempt from {self.client_address}: {expression}")
-            else:
-                error_type = 'Unknown Error'
+def translate_expression(expression):
+    return expression.replace('^', '**')
 
-        return result, error_type, status
+def save_history(history):
+    with open(HISTORY_FILE, 'w') as file:
+        json.dump(history, file)
 
-    # Traduce l'espressione aritmetica in un formato che può essere valutato da eval
-    def translate_expression(self, expression):
-        translated = expression.replace('^', '**')
-        return translated
+def load_history():
+    try:
+        with open(HISTORY_FILE, 'r') as file:
+            return json.load(file)
+    except Exception as e:
+        logging.error(f"Error loading history: {e}")
+        return []
+        
+def history_json_to_html(history):
+    html = ""
+    for item in history:
+        html += f"<p>{item['expression']} = <span style='color:green;'>{item['result']}</span></p>"
+    return html
 
-# Funzione per avviare il server    
-def start_server(port):
-    with socketserver.TCPServer(("", port), MyHttpRequestHandler) as httpd:
-        logging.debug(f"Server successfully started on http://localhost:{port}")
-        httpd.serve_forever()
-
-def main():
-    # Configura il logger
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
-    # Configura il parser degli argomenti
-    parser = argparse.ArgumentParser(description="Web Calculator Application")
-    parser.add_argument("command", choices=["start"], help="Command to execute")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"Port number (default: {DEFAULT_PORT})")
-
-    args = parser.parse_args()
-
-    if args.command == "start":
-        try:
-            start_server(args.port)
-        except KeyboardInterrupt:
-            logging.debug("Server stopped by user")
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+    app.run(port=DEFAULT_PORT)
