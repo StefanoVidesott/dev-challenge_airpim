@@ -3,16 +3,7 @@
 
 Il progetto è nato da una "sfida di sviluppo" con l'obbiettivo di stimare alcune mie abilità tecniche; consiste nella realizzazione di un'applicazione web che funge da calcolatrice online. Gli utenti possono inserire espressioni aritmetiche nella pagina web e ottenerne il risultato.
 Ps. Il progetto è stato successivamente riutilizzato per compiere ulteriori operazioni di stima con istruzioni non presenti sulla consegna.
-
-## Istruzioni per l'esecuzione
-
--   Come avviare il server:
-1.  Aprire il terminale e spostarsi nella directory principale del progetto
-2. Avviare il server eseguendo il seguente comando `python app.py start`
-(`python app.py --help` per maggiori informazioni) 
-4. Apri il browser e vai all'indirizzo http://localhost:8000 per utilizzare la calcolatrice.
     
-
 ## Struttura del Progetto
 
 ```
